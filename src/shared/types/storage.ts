@@ -5,6 +5,7 @@ export interface StorageSchema {
   apiToken: string | null          // Todoist API 토큰 (null이면 미설정)
   blockedSites: BlockedSite[]      // 차단 사이트 목록
   activeTaskId: string | null      // 현재 "진행" 상태인 할일의 Todoist ID
+  activeTaskTitle: string | null   // 현재 "진행" 상태인 할일의 제목 (배지 툴팁 복원용)
   nextRuleId: number               // 다음 차단 규칙에 사용할 ID (자동 증가)
 }
 
@@ -13,5 +14,6 @@ export const DEFAULT_STORAGE: StorageSchema = {
   apiToken: null,
   blockedSites: [],
   activeTaskId: null,
+  activeTaskTitle: null,
   nextRuleId: 1,
 }

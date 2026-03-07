@@ -8,6 +8,14 @@ vi.mock('./blocking', () => ({
   deactivateBlocking: vi.fn().mockResolvedValue(undefined),
 }))
 
+// badge 모듈 모킹 (chrome.action 호출을 격리)
+vi.mock('./badge', () => ({
+  showBadge: vi.fn().mockResolvedValue(undefined),
+  clearBadge: vi.fn().mockResolvedValue(undefined),
+  setActiveTaskTitle: vi.fn().mockResolvedValue(undefined),
+  resetTitle: vi.fn().mockResolvedValue(undefined),
+}))
+
 // fetch 모킹
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -235,6 +243,135 @@ describe('UPDATE_TODO_STATUS 메시지 핸들러', () => {
       expect.objectContaining({ activeTaskId: 'task-new' }),
       expect.any(Function)
     )
+  })
+
+  // ─── US1: 배지 표시/제거 ─────────────────────────────────────────────────
+
+  it('[US1] in_progress 전환 시 showBadge()가 호출된다', async () => {
+    const { showBadge } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: null })
+      }
+    )
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'in_progress' },
+    })
+
+    expect(showBadge).toHaveBeenCalled()
+  })
+
+  it('[US1] completed 전환 시 clearBadge()가 호출된다', async () => {
+    const { clearBadge } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: 'task-1' })
+      }
+    )
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'completed' },
+    })
+
+    expect(clearBadge).toHaveBeenCalled()
+  })
+
+  it('[US1] idle 전환 시 clearBadge()가 호출된다', async () => {
+    const { clearBadge } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: 'task-1' })
+      }
+    )
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'idle' },
+    })
+
+    expect(clearBadge).toHaveBeenCalled()
+  })
+
+  // ─── US3: 툴팁 ──────────────────────────────────────────────────────────
+
+  it('[US3] in_progress 전환 시 setActiveTaskTitle(taskContent)가 호출된다', async () => {
+    const { setActiveTaskTitle } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: null })
+      }
+    )
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'in_progress', taskContent: '보고서 작성' },
+    })
+
+    expect(setActiveTaskTitle).toHaveBeenCalledWith('보고서 작성')
+  })
+
+  it('[US3] idle 전환 시 resetTitle()이 호출된다', async () => {
+    const { resetTitle } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: 'task-1' })
+      }
+    )
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'idle', taskContent: '보고서 작성' },
+    })
+
+    expect(resetTitle).toHaveBeenCalled()
+  })
+
+  it('[US3] completed 전환 시 resetTitle()이 호출된다', async () => {
+    const { resetTitle } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: 'task-1' })
+      }
+    )
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
+
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'completed', taskContent: '보고서 작성' },
+    })
+
+    expect(resetTitle).toHaveBeenCalled()
+  })
+
+  // ─── T031: 마이그레이션 엣지 케이스 ─────────────────────────────────────
+
+  it('[T031] activeTaskTitle 없이 in_progress 전환 시 배지는 표시되지만 setActiveTaskTitle은 호출되지 않는다', async () => {
+    const { showBadge, setActiveTaskTitle } = await import('./badge')
+
+    chrome.storage.local.get = vi.fn().mockImplementation(
+      (_keys: unknown, callback: (r: Record<string, unknown>) => void) => {
+        callback({ apiToken: 'my-token', blockedSites: [], activeTaskId: null })
+      }
+    )
+
+    // taskContent 없이 전송 (마이그레이션 케이스)
+    await handleMessage({
+      type: 'UPDATE_TODO_STATUS',
+      payload: { taskId: 'task-1', newStatus: 'in_progress' },
+    })
+
+    expect(showBadge).toHaveBeenCalled()
+    expect(setActiveTaskTitle).not.toHaveBeenCalled()
   })
 })
 

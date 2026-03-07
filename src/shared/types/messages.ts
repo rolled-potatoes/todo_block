@@ -32,7 +32,7 @@ export type FetchTodosMessage = Message<'FETCH_TODOS'>
 
 export type UpdateTodoStatusMessage = Message<
   'UPDATE_TODO_STATUS',
-  { taskId: string; newStatus: TodoStatus }
+  { taskId: string; newStatus: TodoStatus; taskContent?: string }
 >
 
 export type AddBlockedSiteMessage = Message<'ADD_BLOCKED_SITE', { domain: string }>

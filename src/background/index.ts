@@ -4,17 +4,26 @@
 import { initStorage, getStorage } from '../shared/storage'
 import { handleMessage } from './message-handler'
 import { activateBlocking } from './blocking'
+import { showBadge, setActiveTaskTitle } from './badge'
 import type { AnyMessage } from '../shared/types/messages'
 
 /**
- * 브라우저 재시작 또는 서비스 워커 활성화 시 차단 규칙을 복원한다
- * activeTaskId가 있으면 blockedSites로 DNR 규칙을 재등록한다
+ * 브라우저 재시작 또는 서비스 워커 활성화 시 차단 규칙과 배지를 복원한다
+ * activeTaskId가 있으면 blockedSites로 DNR 규칙을 재등록하고 배지를 표시한다
  */
 async function restoreBlockingIfNeeded(): Promise<void> {
-  const storage = await getStorage(['activeTaskId', 'blockedSites'])
-  if (storage.activeTaskId && storage.blockedSites && storage.blockedSites.length > 0) {
-    await activateBlocking(storage.blockedSites)
-    console.log('차단 규칙 복원 완료:', storage.blockedSites.length, '개 사이트')
+  const storage = await getStorage(['activeTaskId', 'blockedSites', 'activeTaskTitle'])
+  if (storage.activeTaskId) {
+    if (storage.blockedSites && storage.blockedSites.length > 0) {
+      await activateBlocking(storage.blockedSites)
+      console.log('차단 규칙 복원 완료:', storage.blockedSites.length, '개 사이트')
+    }
+    // 배지 복원
+    await showBadge()
+    // 툴팁 복원 (activeTaskTitle이 있는 경우)
+    if (storage.activeTaskTitle) {
+      await setActiveTaskTitle(storage.activeTaskTitle)
+    }
   }
 }
 

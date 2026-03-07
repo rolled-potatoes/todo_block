@@ -6,6 +6,11 @@ import { vi } from 'vitest'
 // Vitest(jsdom) 환경에서 테스트 실행을 위해 vi.fn()으로 모킹한다
 
 const chromeMock = {
+  action: {
+    setBadgeText: vi.fn().mockResolvedValue(undefined),
+    setBadgeBackgroundColor: vi.fn().mockResolvedValue(undefined),
+    setTitle: vi.fn().mockResolvedValue(undefined),
+  },
   runtime: {
     sendMessage: vi.fn(),
     onMessage: {
