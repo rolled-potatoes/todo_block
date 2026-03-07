@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Todoist 집중 차단기",
+  "version": "0.1.0",
+  "description": "Todoist 오늘 할일을 관리하고 집중을 위해 지정한 사이트 접속을 차단합니다",
+  "icons": {
+    "16": "public/icons/icon16.png",
+    "32": "public/icons/icon32.png",
+    "48": "public/icons/icon48.png",
+    "128": "public/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Todoist 집중 차단기"
+  },
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.ts"]
+    }
+  ],
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://api.todoist.com/*",
+    "<all_urls>"
+  ]
+}
