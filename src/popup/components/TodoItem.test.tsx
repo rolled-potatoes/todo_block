@@ -54,7 +54,7 @@ describe('TodoItem 컴포넌트 — 상태별 버튼', () => {
       expect(mockSendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'UPDATE_TODO_STATUS',
-          payload: { taskId: 'task-1', newStatus: 'in_progress' },
+          payload: expect.objectContaining({ taskId: 'task-1', newStatus: 'in_progress' }),
         }),
         expect.any(Function)
       )
@@ -78,7 +78,7 @@ describe('TodoItem 컴포넌트 — 상태별 버튼', () => {
       expect(mockSendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'UPDATE_TODO_STATUS',
-          payload: { taskId: 'task-1', newStatus: 'idle' },
+          payload: expect.objectContaining({ taskId: 'task-1', newStatus: 'idle' }),
         }),
         expect.any(Function)
       )
@@ -100,7 +100,7 @@ describe('TodoItem 컴포넌트 — 상태별 버튼', () => {
       expect(mockSendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'UPDATE_TODO_STATUS',
-          payload: { taskId: 'task-1', newStatus: 'completed' },
+          payload: expect.objectContaining({ taskId: 'task-1', newStatus: 'completed' }),
         }),
         expect.any(Function)
       )

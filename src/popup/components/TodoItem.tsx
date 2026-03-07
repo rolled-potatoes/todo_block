@@ -29,7 +29,7 @@ export default function TodoItem({ todo, onStatusChange }: TodoItemProps) {
   function sendStatusChange(newStatus: TodoStatus) {
     const message: UpdateTodoStatusMessage = {
       type: 'UPDATE_TODO_STATUS',
-      payload: { taskId: todo.id, newStatus },
+      payload: { taskId: todo.id, newStatus, taskContent: todo.content },
     }
 
     chrome.runtime.sendMessage(message, (response: UpdateTodoStatusResponse) => {

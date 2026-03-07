@@ -1,6 +1,7 @@
 import { getStorage, setStorage } from '../shared/storage'
 import { fetchTodayTasks, closeTask } from './todoist'
 import { activateBlocking, deactivateBlocking } from './blocking'
+import { showBadge, clearBadge, setActiveTaskTitle, resetTitle } from './badge'
 import { isValidDomain, createBlockedSite } from '../shared/types/blocked-site'
 import { extractDomain } from '../shared/utils'
 import type { AnyMessage, MessageResponse } from '../shared/types/messages'
@@ -22,7 +23,7 @@ export async function handleMessage(message: AnyMessage): Promise<MessageRespons
       return handleSaveApiToken(message.payload!.token)
 
     case 'UPDATE_TODO_STATUS':
-      return handleUpdateTodoStatus(message.payload!.taskId, message.payload!.newStatus)
+      return handleUpdateTodoStatus(message.payload!.taskId, message.payload!.newStatus, message.payload!.taskContent)
 
     case 'ADD_BLOCKED_SITE':
       return handleAddBlockedSite(message.payload!.domain)
@@ -92,7 +93,8 @@ async function handleSaveApiToken(token: string): Promise<MessageResponse<unknow
  */
 async function handleUpdateTodoStatus(
   taskId: string,
-  newStatus: string
+  newStatus: string,
+  taskContent?: string
 ): Promise<MessageResponse<unknown>> {
   const storage = await getStorage(['apiToken', 'blockedSites', 'activeTaskId'])
   const { apiToken, blockedSites = [], activeTaskId } = storage
@@ -101,9 +103,14 @@ async function handleUpdateTodoStatus(
     activeTaskId && activeTaskId !== taskId ? { id: activeTaskId } : null
 
   if (newStatus === 'in_progress') {
-    // 차단 활성화 후 activeTaskId 갱신
+    // 차단 활성화 후 activeTaskId 및 activeTaskTitle 갱신
     await activateBlocking(blockedSites)
-    await setStorage({ activeTaskId: taskId })
+    await setStorage({ activeTaskId: taskId, activeTaskTitle: taskContent ?? null })
+    // 배지 표시 및 툴팁 설정
+    await showBadge()
+    if (taskContent) {
+      await setActiveTaskTitle(taskContent)
+    }
 
     return {
       success: true,
@@ -121,7 +128,10 @@ async function handleUpdateTodoStatus(
       await closeTask(apiToken, taskId)
     }
     await deactivateBlocking()
-    await setStorage({ activeTaskId: null })
+    await setStorage({ activeTaskId: null, activeTaskTitle: null })
+    // 배지 제거 및 툴팁 초기화
+    await clearBadge()
+    await resetTitle()
 
     return {
       success: true,
@@ -135,7 +145,10 @@ async function handleUpdateTodoStatus(
 
   // idle (중단)
   await deactivateBlocking()
-  await setStorage({ activeTaskId: null })
+  await setStorage({ activeTaskId: null, activeTaskTitle: null })
+  // 배지 제거 및 툴팁 초기화
+  await clearBadge()
+  await resetTitle()
 
   return {
     success: true,
