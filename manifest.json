@@ -33,5 +33,11 @@
   "host_permissions": [
     "https://api.todoist.com/*",
     "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/pages/blocked/index.html"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
