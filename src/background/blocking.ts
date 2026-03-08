@@ -1,7 +1,7 @@
 import type { BlockedSite } from '../shared/types/blocked-site'
 
-// 차단 시 리다이렉트할 페이지 경로
-const BLOCKED_PAGE_PATH = '/pages/blocked/index.html'
+// 차단 시 리다이렉트할 페이지 경로 (CRXJS 빌드 시 src/ 하위 경로로 출력됨)
+const BLOCKED_PAGE_PATH = '/src/pages/blocked/index.html'
 
 /**
  * BlockedSite 배열을 DNR(declarativeNetRequest) redirect 규칙으로 변환하여 활성화한다
